@@ -71,25 +71,36 @@ def verify_and_register_payment(ref_number):
     except Exception as e:
         return "ERROR", str(e)
 
-# --- COOKIE MANAGER SETUP ---
+# --- TRACKING SETUP (QUERY PARAMS + COOKIE) ---
 cookie_manager = stx.CookieManager()
+
+# Kunin ang trial count mula sa URL query parameters o cookies para walang lag/reset
+query_params = st.query_params
+url_tries = query_params.get("tries", None)
 
 try:
     cookie_tries = cookie_manager.get(cookie="guro_hub_tries")
-    stored_tries = int(cookie_tries) if cookie_tries is not None else 0
 except:
-    stored_tries = 0
+    cookie_tries = None
+
+# Alin ang pinakamataas na tries para hindi ma-bypass
+saved_tries = 0
+if url_tries is not None:
+    try: saved_tries = max(saved_tries, int(url_tries))
+    except: pass
+if cookie_tries is not None:
+    try: saved_tries = max(saved_tries, int(cookie_tries))
+    except: pass
 
 FREE_LIMIT = 3
-
 if "tries_count" not in st.session_state:
-    st.session_state.tries_count = max(stored_tries, 0)
+    st.session_state.tries_count = saved_tries
 
 if "is_unlocked" not in st.session_state:
     st.session_state.is_unlocked = False
 
-# Siguraduhing kung ang cookie ay naka-ubos na (3), hindi na bababa
-if stored_tries >= FREE_LIMIT and st.session_state.tries_count < FREE_LIMIT:
+# Siguraduhing napapanatili ang limit kapag naabot na ang 3
+if st.session_state.tries_count > FREE_LIMIT:
     st.session_state.tries_count = FREE_LIMIT
 
 tries_left = max(0, FREE_LIMIT - st.session_state.tries_count)
@@ -143,8 +154,12 @@ def can_use_service():
 def register_usage():
     if not st.session_state.is_unlocked:
         st.session_state.tries_count += 1
-        # I-save nang diretso sa cookie para hindi na magbago kahit mag-refresh
-        cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=365))
+        # I-save sa Cookie at sabay na i-lock sa URL query parameters para hindi mag-reset sa refresh
+        try:
+            cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=365))
+        except:
+            pass
+        st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
     model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
