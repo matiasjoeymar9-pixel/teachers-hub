@@ -74,18 +74,11 @@ def verify_and_register_payment(ref_number):
 # --- COOKIE MANAGER SETUP ---
 cookie_manager = stx.CookieManager()
 
-# Hintayin mag-load ang cookies
-if not cookie_manager.ready:
-    st.stop()
-
 # Kunin ang trial count mula sa browser cookies kung meron na
-cookie_tries = cookie_manager.get(cookie="guro_hub_tries")
-if cookie_tries is not None:
-    try:
-        stored_tries = int(cookie_tries)
-    except:
-        stored_tries = 0
-else:
+try:
+    cookie_tries = cookie_manager.get(cookie="guro_hub_tries")
+    stored_tries = int(cookie_tries) if cookie_tries is not None else 0
+except:
     stored_tries = 0
 
 FREE_LIMIT = 3
@@ -146,7 +139,6 @@ def can_use_service():
 def register_usage():
     if not st.session_state.is_unlocked:
         st.session_state.tries_count += 1
-        # I-save sa browser cookie ng client na valid ng 30 days para hindi mag-reset sa refresh
         cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=30))
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
