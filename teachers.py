@@ -107,7 +107,7 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
-    # -------------------------------------------------------------
+  # -------------------------------------------------------------
     # TAB 2: Quiz Generator
     # -------------------------------------------------------------
     elif selected_service == "❓ Quiz Generator":
@@ -115,23 +115,25 @@ else:
         
         col1, col2 = st.columns(2)
         with col1:
+            quiz_subject = st.text_input("Subject (e.g., Math, Science):")
             quiz_topic = st.text_input("Topic para sa Quiz:")
             num_items = st.slider("Bilang ng items:", 5, 20, 10)
         with col2:
+            quiz_grade = st.selectbox("Grade Level:", ["Grade 1-3", "Grade 4-6", "Grade 7-10", "Grade 11-12", "College"])
             quiz_language = st.selectbox("Wika / Language:", ["English", "Tagalog / Filipino", "Taglish"])
         
         if st.button("Generate Quiz"):
             if not api_key:
                 st.warning("Kailangan ng API Key para gumana.")
-            elif not quiz_topic:
-                st.warning("Paki-input ang Topic.")
+            elif not quiz_topic or not quiz_subject:
+                st.warning("Paki-input ang Subject at Topic.")
             else:
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Strict prompt with Grammar/Spelling check instructions
-                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Siguraduhing PERFECT at walang mali sa English grammar, spelling, at formatting. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
+                    # Strict prompt with Subject and Grade Level
+                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz sa {quiz_subject} para sa {quiz_grade} na may topic na '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Siguraduhing PERFECT at walang mali sa grammar, spelling, at formatting sa napiling wika ({quiz_language}). Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
