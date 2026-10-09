@@ -158,8 +158,7 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
-    # Sinusubukan ang mga available na generative models para sigurado
-    for model_name in ['gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-pro']:
+    for model_name in ['gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-pro']:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt_text)
