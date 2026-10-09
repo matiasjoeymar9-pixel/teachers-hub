@@ -81,11 +81,16 @@ except:
     stored_tries = 0
 
 FREE_LIMIT = 3
+
 if "tries_count" not in st.session_state:
-    st.session_state.tries_count = stored_tries
+    st.session_state.tries_count = max(stored_tries, 0)
 
 if "is_unlocked" not in st.session_state:
     st.session_state.is_unlocked = False
+
+# Siguraduhing kung ang cookie ay naka-ubos na (3), hindi na bababa
+if stored_tries >= FREE_LIMIT and st.session_state.tries_count < FREE_LIMIT:
+    st.session_state.tries_count = FREE_LIMIT
 
 tries_left = max(0, FREE_LIMIT - st.session_state.tries_count)
 
@@ -138,10 +143,10 @@ def can_use_service():
 def register_usage():
     if not st.session_state.is_unlocked:
         st.session_state.tries_count += 1
-        cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=30))
+        # I-save nang diretso sa cookie para hindi na magbago kahit mag-refresh
+        cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=365))
 
 def generate_ai_response(prompt_text):
-    # Subukan ang mga pangunahing modelo nang sunud-sunod para maiwasan ang NotFound error
     model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
     for m_name in model_names:
         try:
