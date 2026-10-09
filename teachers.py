@@ -74,7 +74,6 @@ def verify_and_register_payment(ref_number):
 # --- COOKIE MANAGER SETUP ---
 cookie_manager = stx.CookieManager()
 
-# Kunin ang trial count mula sa browser cookies kung meron na
 try:
     cookie_tries = cookie_manager.get(cookie="guro_hub_tries")
     stored_tries = int(cookie_tries) if cookie_tries is not None else 0
@@ -159,7 +158,7 @@ if service == "📝 Lesson Plan Generator":
             st.warning("Paki-sulat ang Subject at Topic.")
         else:
             with st.spinner("Gumagawang Lesson Plan..."):
-                prompt = f"Gumawa ng kumpletong 4As Lesson Plan sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
+                prompt = f"Gumawa ng kumpletong 4As Lesson Plan (Objectives, Subject Matter, Procedure: Activity, Analysis, Abstraction, Application, Assessment) sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(prompt)
                 
@@ -207,5 +206,4 @@ elif service == "🧹 Class List Cleaner":
             
             register_usage()
             st.markdown("### ✨ Malinis na Listahan:")
-            formatted_text = "\n".join([f"{i+1}. {name}" for i, name in enumerate(names_list)])
-            st.text_area("Resulta (Ready to Copy):", formatted_text, height=200)
+            formatted_text = "\n".join
