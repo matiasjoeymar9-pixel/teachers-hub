@@ -57,7 +57,7 @@ else:
             else:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-3.8-flash')
                     prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Isama ang Objectives, Subject Matter, Procedure, at Evaluation."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
@@ -82,7 +82,7 @@ else:
             else:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                   model = genai.GenerativeModel('gemini-3.8-flash')
                     prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Isama ang Answer Key sa pinakababa."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
