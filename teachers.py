@@ -53,7 +53,7 @@ if st.session_state.is_unlocked:
 elif tries_left > 0:
     st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
 else:
-    st.sidebar.image("my_gcash_qr.png", caption="Scan to Pay ₱99 via GCash")
+    st.sidebar.image("gcashqrcode.jpg", caption="Scan to Pay ₱99 via GCash")
 
 # QR Code at Payment Auto-Verification Section
 st.sidebar.markdown("---")
