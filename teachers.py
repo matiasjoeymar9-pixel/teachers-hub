@@ -49,11 +49,11 @@ selected_service = st.sidebar.radio(
 # Counter Tracker sa Sidebar
 st.sidebar.markdown("---")
 if st.session_state.is_unlocked:
-    st.sidebar.success("✅ VIP Subscriber Access Active (Unlimited Tries)!")
+    st.sidebar.success("✅ VIP Subscriber Access Active (Unlimited Access for 1 Month)!")
 elif tries_left > 0:
     st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
 else:
-    st.sidebar.image("gcashqrcode.jpg", caption="📲 Scan QR Code & Pay ₱99 to Unlock Unlimited Access (1 Month) ")
+    st.sidebar.image("gcashqrcode.jpg", caption="📲 Scan QR Code & Pay ₱99 to Unlock Unlimited Access for (1 Month) ")
 
 # QR Code at Payment Auto-Verification Section
 st.sidebar.markdown("---")
