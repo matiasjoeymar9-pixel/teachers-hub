@@ -6,6 +6,7 @@ import requests
 import json
 import base64
 from datetime import datetime, timedelta
+import extra_streamlit_components as stx
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -26,7 +27,6 @@ REPO_NAME = "teachers-hub"
 FILE_PATH = "database.json"
 
 def get_github_db():
-    """Kukunin ang database.json mula sa GitHub repository"""
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     response = requests.get(url, headers=headers)
@@ -37,7 +37,6 @@ def get_github_db():
     return {}, None
 
 def save_github_db(db_data, sha):
-    """Magse-save ng bagong record sa database.json sa GitHub"""
     url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     content_encoded = base64.b64encode(json.dumps(db_data, indent=4).encode('utf-8')).decode('utf-8')
@@ -49,13 +48,11 @@ def save_github_db(db_data, sha):
     requests.put(url, headers=headers, json=payload)
 
 def verify_and_register_payment(ref_number):
-    """Tinitingnan kung bago o umiiral na ang Ref No. at chinecheck ang 30-day expiration"""
     try:
         db, sha = get_github_db()
         today = datetime.now().date()
         ref_str = str(ref_number).strip()
 
-        # Kung umiiral na sa database
         if ref_str in db:
             exp_date = datetime.strptime(db[ref_str]["expiration_date"], "%Y-%m-%d").date()
             if today <= exp_date:
@@ -63,7 +60,6 @@ def verify_and_register_payment(ref_number):
             else:
                 return "EXPIRED", exp_date
 
-        # Kung bagong Reference Number, ie-enter for 30 Days validity
         new_exp_date = today + timedelta(days=30)
         db[ref_str] = {
             "date_activated": str(today),
@@ -75,10 +71,26 @@ def verify_and_register_payment(ref_number):
     except Exception as e:
         return "ERROR", str(e)
 
-# --- SESSION STATE (TRIES TRACKER) ---
+# --- COOKIE MANAGER SETUP ---
+cookie_manager = stx.CookieManager()
+
+# Hintayin mag-load ang cookies
+if not cookie_manager.ready:
+    st.stop()
+
+# Kunin ang trial count mula sa browser cookies kung meron na
+cookie_tries = cookie_manager.get(cookie="guro_hub_tries")
+if cookie_tries is not None:
+    try:
+        stored_tries = int(cookie_tries)
+    except:
+        stored_tries = 0
+else:
+    stored_tries = 0
+
 FREE_LIMIT = 3
 if "tries_count" not in st.session_state:
-    st.session_state.tries_count = 0
+    st.session_state.tries_count = stored_tries
 
 if "is_unlocked" not in st.session_state:
     st.session_state.is_unlocked = False
@@ -95,6 +107,8 @@ if st.session_state.is_unlocked:
 else:
     if tries_left > 0:
         st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
+    else:
+        st.sidebar.error("🔒 Ubos na ang iyong 3 Free Tries!")
     
     st.sidebar.subheader("💳 Instant Unlock via GCash")
     st.sidebar.caption("1. I-scan ang QR Code o mag-send ng ₱99 sa GCash.\n2. I-paste ang Ref No. para mag-unlock.")
@@ -129,6 +143,12 @@ def can_use_service():
         return True
     return False
 
+def register_usage():
+    if not st.session_state.is_unlocked:
+        st.session_state.tries_count += 1
+        # I-save sa browser cookie ng client na valid ng 30 days para hindi mag-reset sa refresh
+        cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=30))
+
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
     st.header("📝 DepEd/CHED Lesson Plan Generator")
@@ -147,11 +167,11 @@ if service == "📝 Lesson Plan Generator":
             st.warning("Paki-sulat ang Subject at Topic.")
         else:
             with st.spinner("Gumagawang Lesson Plan..."):
-                prompt = f"Gumawa ng kumpletong 4As Lesson Plan (Objectives, Subject Matter, Procedure: Activity, Analysis, Abstraction, Application, Assessment) sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
+                prompt = f"Gumawa ng kumpletong 4As Lesson Plan sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(prompt)
                 
-                st.session_state.tries_count += 1
+                register_usage()
                 st.markdown("### 📜 Resulta:")
                 st.write(response.text)
 
@@ -173,7 +193,7 @@ elif service == "❓ Quiz Generator":
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(prompt)
                 
-                st.session_state.tries_count += 1
+                register_usage()
                 st.markdown("### 📄 Quiz Paper & Answer Key:")
                 st.write(response.text)
 
@@ -193,7 +213,7 @@ elif service == "🧹 Class List Cleaner":
             if sort_order == "Alphabetical (A-Z)":
                 names_list.sort()
             
-            st.session_state.tries_count += 1
+            register_usage()
             st.markdown("### ✨ Malinis na Listahan:")
             formatted_text = "\n".join([f"{i+1}. {name}" for i, name in enumerate(names_list)])
             st.text_area("Resulta (Ready to Copy):", formatted_text, height=200)
