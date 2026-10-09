@@ -84,8 +84,8 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Strict prompt to prevent LaTeX and markdown clutter
-                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, at Evaluation. MAHALAGA: Huwag gumamit ng Markdown symbols tulad ng #, *, _, o LaTeX mathematical codes (tulad ng \\begin, \\end, $$, \\textbf). Gumamit lamang ng malinis na plain text at standard numbers para madaling basahin at i-print sa Word."
+                    # Clean output prompt including answer keys for both Evaluation & Assignment
+                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, Evaluation, at Assignment. MAHALAGA: Maglagay ng Answer Key o mga tamang sagot sa pinakababa para sa Evaluation at Assignment. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Isulat ang mga math equations nang malinis sa iisang linya (halimbawa: 1. 54 + 28 =)."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
                         response = model.generate_content(prompt)
@@ -130,8 +130,7 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Strict prompt to prevent LaTeX and markdown clutter
-                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text na pwedeng-pwede agad i-print."
+                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
