@@ -169,8 +169,14 @@ if service == "📝 Lesson Plan Generator":
 # --- SERVICE 2: QUIZ GENERATOR ---
 elif service == "❓ Quiz Generator":
     st.header("❓ Instant Quiz Generator")
-    quiz_topic = st.text_input("Topic ng Quiz:")
-    num_q = st.slider("Bilang ng Tanong:", 5, 20, 10)
+    q_col1, q_col2 = st.columns(2)
+    with q_col1:
+        quiz_topic = st.text_input("Topic ng Quiz:")
+        quiz_grade = st.selectbox("Grade Level (Quiz):", ["Grade 1-3", "Grade 4-6", "Grade 7-10", "Grade 11-12", "College"], key="q_grade")
+    with q_col2:
+        quiz_lang = st.selectbox("Wika ng Quiz:", ["English", "Tagalog/Filipino"], key="q_lang")
+        num_q = st.slider("Bilang ng Tanong:", 5, 20, 10)
+    
     quiz_type = st.selectbox("Uri ng Exam:", ["Multiple Choice", "Identification", "True/False", "Mixed"])
 
     if st.button("Generate Quiz"):
@@ -180,7 +186,7 @@ elif service == "❓ Quiz Generator":
             st.warning("Paki-sulat ang topic ng quiz.")
         else:
             with st.spinner("Gumagawang Quiz at Answer Key..."):
-                prompt = f"Gumawa ng {num_q} items na {quiz_type} quiz tungkol sa '{quiz_topic}'. Isama ang Answer Key sa dulo."
+                prompt = f"Gumawa ng {num_q} items na {quiz_type} quiz tungkol sa '{quiz_topic}' para sa {quiz_grade} sa wikalang {quiz_lang}. Isama ang Answer Key sa dulo."
                 model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(prompt)
                 
