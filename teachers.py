@@ -140,6 +140,18 @@ def register_usage():
         st.session_state.tries_count += 1
         cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=30))
 
+def generate_ai_response(prompt_text):
+    # Subukan ang mga pangunahing modelo nang sunud-sunod para maiwasan ang NotFound error
+    model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
+    for m_name in model_names:
+        try:
+            model = genai.GenerativeModel(m_name)
+            res = model.generate_content(prompt_text)
+            return res.text
+        except Exception:
+            continue
+    return "Error: Hindi ma-access ang Gemini AI Model. Paki-check ang iyong GEMINI_API_KEY sa Streamlit secrets."
+
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
     st.header("📝 DepEd/CHED Lesson Plan Generator")
@@ -159,12 +171,11 @@ if service == "📝 Lesson Plan Generator":
         else:
             with st.spinner("Gumagawang Lesson Plan..."):
                 prompt = f"Gumawa ng kumpletong 4As Lesson Plan (Objectives, Subject Matter, Procedure: Activity, Analysis, Abstraction, Application, Assessment) sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
-                model = genai.GenerativeModel('gemini-1.5-pro')
-                response = model.generate_content(prompt)
+                response_text = generate_ai_response(prompt)
                 
                 register_usage()
                 st.markdown("### 📜 Resulta:")
-                st.write(response.text)
+                st.write(response_text)
 
 # --- SERVICE 2: QUIZ GENERATOR ---
 elif service == "❓ Quiz Generator":
@@ -187,12 +198,11 @@ elif service == "❓ Quiz Generator":
         else:
             with st.spinner("Gumagawang Quiz at Answer Key..."):
                 prompt = f"Gumawa ng {num_q} items na {quiz_type} quiz tungkol sa '{quiz_topic}' para sa {quiz_grade} sa wikalang {quiz_lang}. Isama ang Answer Key sa dulo."
-                model = genai.GenerativeModel('gemini-1.5-pro')
-                response = model.generate_content(prompt)
+                response_text = generate_ai_response(prompt)
                 
                 register_usage()
                 st.markdown("### 📄 Quiz Paper & Answer Key:")
-                st.write(response.text)
+                st.write(response_text)
 
 # --- SERVICE 3: CLASS LIST CLEANER ---
 elif service == "🧹 Class List Cleaner":
