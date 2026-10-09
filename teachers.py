@@ -49,7 +49,7 @@ selected_service = st.sidebar.radio(
 # Counter Tracker sa Sidebar
 st.sidebar.markdown("---")
 if st.session_state.is_unlocked:
-    st.sidebar.success("✅ VIP Subscriber Access Active (Unlimited Access for 1 Month)!")
+    st.sidebar.success("✅ VIP Subscriber Access Active (Unlimited for 1 Month)!")
 elif tries_left > 0:
     st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
 else:
