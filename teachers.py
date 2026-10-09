@@ -159,7 +159,7 @@ if service == "📝 Lesson Plan Generator":
         else:
             with st.spinner("Gumagawang Lesson Plan..."):
                 prompt = f"Gumawa ng kumpletong 4As Lesson Plan (Objectives, Subject Matter, Procedure: Activity, Analysis, Abstraction, Application, Assessment) sa wikalang {language} para sa asignaturang {subject}, {grade_level}, tungkol sa araling '{topic}'."
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(prompt)
                 
                 register_usage()
@@ -187,7 +187,7 @@ elif service == "❓ Quiz Generator":
         else:
             with st.spinner("Gumagawang Quiz at Answer Key..."):
                 prompt = f"Gumawa ng {num_q} items na {quiz_type} quiz tungkol sa '{quiz_topic}' para sa {quiz_grade} sa wikalang {quiz_lang}. Isama ang Answer Key sa dulo."
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(prompt)
                 
                 register_usage()
