@@ -1,13 +1,27 @@
 import streamlit as st
 import google.generativeai as genai
+from docx import Document
+import io
 
 # Page Configuration
 st.set_page_config(page_title="Guro Hub - One-Stop Educator Assistant", page_icon="🏫", layout="centered")
 
+# Helper Function para sa Word Document (.docx)
+def create_docx(text_content, title="Guro Hub Generated File"):
+    doc = Document()
+    doc.add_heading(title, level=1)
+    for line in text_content.split('\n'):
+        doc.add_paragraph(line)
+    
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
+
 # Kuhanin ang API Key mula sa Streamlit Secrets o sa Sidebar
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 
-# Initialize Session State para sa 5 Free Tries Counter
+# Initialize Session State para sa Free Tries Counter
 if "tries_used" not in st.session_state:
     st.session_state.tries_used = 0
 
@@ -37,21 +51,28 @@ else:
     st.sidebar.error("❌ Naubos na ang Libreng Subok!")
     st.sidebar.warning("💳 Mag-subscribe ng ₱99/month via GCash para sa Unlimited Access.")
 
-# Kung walang Key sa Secrets, magpakita ng manual input box bilang fallback
+# Fallback API Key input
 if not api_key:
     api_key = st.sidebar.text_input("Gemini API Key:", type="password")
 
 # --- MAIN LOGIC PER SERVICE ---
 if tries_left <= 0:
     st.error("🔒 Nagamit mo na ang iyong 5 libreng subok.")
-    st.info("I-send ang ₱99 subscription via GCash at i-send ang screenshot para ma-activate ang Pro Access.")
+    st.info("I-send ang ₱99 subscription via GCash para ma-activate ang Pro Access.")
 else:
-    # Service 1: Lesson Plan Generator
+    # -------------------------------------------------------------
+    # TAB 1: Lesson Plan Generator
+    # -------------------------------------------------------------
     if selected_service == "📝 Lesson Plan Generator":
         st.subheader("📝 DepEd/CHED Lesson Plan Generator")
-        subject = st.text_input("Subject (e.g., Science, English, Math):")
-        grade = st.selectbox("Grade Level:", ["Grade 1-3", "Grade 4-6", "Grade 7-10", "Grade 11-12", "College"])
-        topic = st.text_input("Topic / Aralin:")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            subject = st.text_input("Subject (e.g., Science, Math):")
+            grade = st.selectbox("Grade Level:", ["Grade 1-3", "Grade 4-6", "Grade 7-10", "Grade 11-12", "College"])
+        with col2:
+            language = st.selectbox("Wika / Language:", ["Tagalog / Filipino", "English", "Taglish"])
+            topic = st.text_input("Topic / Aralin:")
         
         if st.button("Generate Lesson Plan"):
             if not api_key:
@@ -62,21 +83,40 @@ else:
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
-                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Isama ang Objectives, Subject Matter, Procedure, at Evaluation."
+                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, at Evaluation."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
                         response = model.generate_content(prompt)
                         st.session_state.tries_used += 1
-                        st.success("Tapos na!")
-                        st.write(response.text)
+                        st.session_state.lesson_plan_result = response.text
                 except Exception as e:
                     st.error(f"May error: {e}")
 
-    # Service 2: Quiz Generator
+        # Result display and Word download
+        if "lesson_plan_result" in st.session_state:
+            st.success("Tapos na!")
+            st.write(st.session_state.lesson_plan_result)
+            
+            docx_file = create_docx(st.session_state.lesson_plan_result, title=f"Lesson Plan: {topic}")
+            st.download_button(
+                label="📄 Download Editable Word (.docx) File",
+                data=docx_file,
+                file_name=f"Lesson_Plan_{topic}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
+    # -------------------------------------------------------------
+    # TAB 2: Quiz Generator
+    # -------------------------------------------------------------
     elif selected_service == "❓ Quiz Generator":
         st.subheader("❓ Quick Quiz Generator")
-        quiz_topic = st.text_input("Topic para sa Quiz:")
-        num_items = st.slider("Bilang ng items:", 5, 20, 10)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            quiz_topic = st.text_input("Topic para sa Quiz:")
+            num_items = st.slider("Bilang ng items:", 5, 20, 10)
+        with col2:
+            quiz_language = st.selectbox("Wika / Language:", ["Tagalog / Filipino", "English", "Taglish"])
         
         if st.button("Generate Quiz"):
             if not api_key:
@@ -87,19 +127,40 @@ else:
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
-                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Isama ang Answer Key sa pinakababa."
+                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
                         st.session_state.tries_used += 1
-                        st.success("Tapos na!")
-                        st.write(response.text)
+                        st.session_state.quiz_result = response.text
                 except Exception as e:
                     st.error(f"May error: {e}")
 
-    # Service 3: Class List Cleaner
+        # Result display and Word download
+        if "quiz_result" in st.session_state:
+            st.success("Tapos na!")
+            st.write(st.session_state.quiz_result)
+            
+            docx_file = create_docx(st.session_state.quiz_result, title=f"Quiz: {quiz_topic}")
+            st.download_button(
+                label="📄 Download Editable Word (.docx) File",
+                data=docx_file,
+                file_name=f"Quiz_{quiz_topic}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
+    # -------------------------------------------------------------
+    # TAB 3: Class List Cleaner
+    # -------------------------------------------------------------
     elif selected_service == "🧹 Class List Cleaner":
         st.subheader("🧹 Class List Format Cleaner")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            list_title = st.text_input("Header / Class Name (e.g., Grade 1 - Sunflower):", value="Class List")
+        with col2:
+            list_language = st.selectbox("Header Language Format:", ["Tagalog / Filipino", "English"])
+
         raw_names = st.text_area("I-paste ang magulong listahan ng pangalan dito:")
         
         if st.button("Clean & Format Names"):
@@ -107,5 +168,21 @@ else:
                 lines = [name.strip().upper() for name in raw_names.split("\n") if name.strip()]
                 lines.sort()
                 st.session_state.tries_used += 1
-                st.success("Nalinis at Naka-alphabetical Order na:")
-                st.code("\n".join(lines))
+                
+                header_text = f"LISTAHAN NG MGA MAG-AARAL - {list_title}" if list_language == "Tagalog / Filipino" else f"CLASS LIST - {list_title}"
+                formatted_text = f"{header_text}\n" + "="*30 + "\n\n" + "\n".join([f"{idx+1}. {name}" for idx, name in enumerate(lines)])
+                
+                st.session_state.cleaned_list_result = formatted_text
+
+        # Result display and Word download
+        if "cleaned_list_result" in st.session_state:
+            st.success("Nalinis at Naka-alphabetical Order na:")
+            st.code(st.session_state.cleaned_list_result)
+            
+            docx_file = create_docx(st.session_state.cleaned_list_result, title="Cleaned Class List")
+            st.download_button(
+                label="📄 Download Class List (.docx)",
+                data=docx_file,
+                file_name=f"{list_title}_Cleaned.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
