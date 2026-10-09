@@ -4,6 +4,9 @@ import google.generativeai as genai
 # Page Configuration
 st.set_page_config(page_title="Guro Hub - One-Stop Educator Assistant", page_icon="🏫", layout="centered")
 
+# Kuhanin ang API Key mula sa Streamlit Secrets o sa Sidebar
+api_key = st.secrets.get("GEMINI_API_KEY", "")
+
 # Initialize Session State para sa 5 Free Tries Counter
 if "tries_used" not in st.session_state:
     st.session_state.tries_used = 0
@@ -34,8 +37,9 @@ else:
     st.sidebar.error("❌ Naubos na ang Libreng Subok!")
     st.sidebar.warning("💳 Mag-subscribe ng ₱99/month via GCash para sa Unlimited Access.")
 
-# Input ng API Key
-api_key = st.sidebar.text_input("Gemini API Key:", type="password")
+# Kung walang Key sa Secrets, magpakita ng manual input box bilang fallback
+if not api_key:
+    api_key = st.sidebar.text_input("Gemini API Key:", type="password")
 
 # --- MAIN LOGIC PER SERVICE ---
 if tries_left <= 0:
@@ -51,13 +55,13 @@ else:
         
         if st.button("Generate Lesson Plan"):
             if not api_key:
-                st.warning("Paki-input ang iyong Gemini API Key sa sidebar.")
+                st.warning("Kailangan ng API Key para gumana.")
             elif not topic or not subject:
                 st.warning("Paki-kumpleto ang Subject at Topic.")
             else:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Isama ang Objectives, Subject Matter, Procedure, at Evaluation."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
@@ -66,7 +70,7 @@ else:
                         st.success("Tapos na!")
                         st.write(response.text)
                 except Exception as e:
-                    st.error(f"May error sa API Key: {e}")
+                    st.error(f"May error: {e}")
 
     # Service 2: Quiz Generator
     elif selected_service == "❓ Quiz Generator":
@@ -76,13 +80,13 @@ else:
         
         if st.button("Generate Quiz"):
             if not api_key:
-                st.warning("Paki-input ang iyong Gemini API Key sa sidebar.")
+                st.warning("Kailangan ng API Key para gumana.")
             elif not quiz_topic:
                 st.warning("Paki-input ang Topic.")
             else:
                 try:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-2.5-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Isama ang Answer Key sa pinakababa."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
@@ -91,7 +95,7 @@ else:
                         st.success("Tapos na!")
                         st.write(response.text)
                 except Exception as e:
-                    st.error(f"May error sa API Key: {e}")
+                    st.error(f"May error: {e}")
 
     # Service 3: Class List Cleaner
     elif selected_service == "🧹 Class List Cleaner":
