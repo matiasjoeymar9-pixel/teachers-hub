@@ -83,7 +83,9 @@ else:
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
-                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, at Evaluation."
+                    
+                    # Strict prompt to prevent LaTeX and markdown clutter
+                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, at Evaluation. MAHALAGA: Huwag gumamit ng Markdown symbols tulad ng #, *, _, o LaTeX mathematical codes (tulad ng \\begin, \\end, $$, \\textbf). Gumamit lamang ng malinis na plain text at standard numbers para madaling basahin at i-print sa Word."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
                         response = model.generate_content(prompt)
@@ -127,7 +129,9 @@ else:
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
-                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa."
+                    
+                    # Strict prompt to prevent LaTeX and markdown clutter
+                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text na pwedeng-pwede agad i-print."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
