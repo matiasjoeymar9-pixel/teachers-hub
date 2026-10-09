@@ -74,7 +74,6 @@ def verify_and_register_payment(ref_number):
 # --- TRACKING SETUP (QUERY PARAMS + COOKIE) ---
 cookie_manager = stx.CookieManager()
 
-# Kunin ang trial count mula sa URL query parameters o cookies para walang lag/reset
 query_params = st.query_params
 url_tries = query_params.get("tries", None)
 
@@ -83,7 +82,6 @@ try:
 except:
     cookie_tries = None
 
-# Alin ang pinakamataas na tries para hindi ma-bypass
 saved_tries = 0
 if url_tries is not None:
     try: saved_tries = max(saved_tries, int(url_tries))
@@ -99,7 +97,6 @@ if "tries_count" not in st.session_state:
 if "is_unlocked" not in st.session_state:
     st.session_state.is_unlocked = False
 
-# Siguraduhing napapanatili ang limit kapag naabot na ang 3
 if st.session_state.tries_count > FREE_LIMIT:
     st.session_state.tries_count = FREE_LIMIT
 
@@ -154,7 +151,6 @@ def can_use_service():
 def register_usage():
     if not st.session_state.is_unlocked:
         st.session_state.tries_count += 1
-        # I-save sa Cookie at sabay na i-lock sa URL query parameters para hindi mag-reset sa refresh
         try:
             cookie_manager.set("guro_hub_tries", str(st.session_state.tries_count), expires_at=datetime.now() + timedelta(days=365))
         except:
@@ -162,15 +158,13 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
-    model_names = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro']
-    for m_name in model_names:
-        try:
-            model = genai.GenerativeModel(m_name)
-            res = model.generate_content(prompt_text)
-            return res.text
-        except Exception:
-            continue
-    return "Error: Hindi ma-access ang Gemini AI Model. Paki-check ang iyong GEMINI_API_KEY sa Streamlit secrets."
+    try:
+        # Gamitin ang tamang GenerativeModel na may gemini-1.5-flash
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt_text)
+        return response.text
+    except Exception as e:
+        return f"⚠️ AI Error Details: {str(e)}"
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
