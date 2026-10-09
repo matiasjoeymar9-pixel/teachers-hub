@@ -71,7 +71,7 @@ else:
             subject = st.text_input("Subject (e.g., Science, Math):")
             grade = st.selectbox("Grade Level:", ["Grade 1-3", "Grade 4-6", "Grade 7-10", "Grade 11-12", "College"])
         with col2:
-            language = st.selectbox("Wika / Language:", ["Tagalog / Filipino", "English", "Taglish"])
+            language = st.selectbox("Wika / Language:", ["English", "Tagalog / Filipino", "Taglish"])
             topic = st.text_input("Topic / Aralin:")
         
         if st.button("Generate Lesson Plan"):
@@ -84,8 +84,8 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Clean output prompt including answer keys for both Evaluation & Assignment
-                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, Evaluation, at Assignment. MAHALAGA: Maglagay ng Answer Key o mga tamang sagot sa pinakababa para sa Evaluation at Assignment. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Isulat ang mga math equations nang malinis sa iisang linya (halimbawa: 1. 54 + 28 =)."
+                    # Strict prompt with Grammar/Spelling check instructions
+                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, Evaluation, at Assignment. MAHALAGA: 1. Siguraduhing PERFECT ang English grammar, spelling, punctuation, at sentence structure nang walang anumang typographical errors. 2. Maglagay ng Answer Key sa pinakababa para sa Evaluation at Assignment. 3. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Isulat ang mga math equations nang malinis sa iisang linya (halimbawa: 1. 54 + 28 =)."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
                         response = model.generate_content(prompt)
@@ -118,7 +118,7 @@ else:
             quiz_topic = st.text_input("Topic para sa Quiz:")
             num_items = st.slider("Bilang ng items:", 5, 20, 10)
         with col2:
-            quiz_language = st.selectbox("Wika / Language:", ["Tagalog / Filipino", "English", "Taglish"])
+            quiz_language = st.selectbox("Wika / Language:", ["English", "Tagalog / Filipino", "Taglish"])
         
         if st.button("Generate Quiz"):
             if not api_key:
@@ -130,7 +130,8 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
+                    # Strict prompt with Grammar/Spelling check instructions
+                    prompt = f"Gumawa ng {num_items}-item multiple choice quiz tungkol sa '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Siguraduhing PERFECT at walang mali sa English grammar, spelling, at formatting. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
@@ -162,7 +163,7 @@ else:
         with col1:
             list_title = st.text_input("Header / Class Name (e.g., Grade 1 - Sunflower):", value="Class List")
         with col2:
-            list_language = st.selectbox("Header Language Format:", ["Tagalog / Filipino", "English"])
+            list_language = st.selectbox("Header Language Format:", ["English", "Tagalog / Filipino"])
 
         raw_names = st.text_area("I-paste ang magulong listahan ng pangalan dito:")
         
@@ -172,7 +173,7 @@ else:
                 lines.sort()
                 st.session_state.tries_used += 1
                 
-                header_text = f"LISTAHAN NG MGA MAG-AARAL - {list_title}" if list_language == "Tagalog / Filipino" else f"CLASS LIST - {list_title}"
+                header_text = f"CLASS LIST - {list_title}" if list_language == "English" else f"LISTAHAN NG MGA MAG-AARAL - {list_title}"
                 formatted_text = f"{header_text}\n" + "="*30 + "\n\n" + "\n".join([f"{idx+1}. {name}" for idx, name in enumerate(lines)])
                 
                 st.session_state.cleaned_list_result = formatted_text
