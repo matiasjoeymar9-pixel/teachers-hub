@@ -21,9 +21,12 @@ def create_docx(text_content, title="Guro Hub Generated File"):
 # Kuhanin ang API Key mula sa Streamlit Secrets o sa Sidebar
 api_key = st.secrets.get("GEMINI_API_KEY", "")
 
-# Initialize Session State para sa Free Tries Counter
+# Initialize Session State para sa Free Tries at Payment Status
 if "tries_used" not in st.session_state:
     st.session_state.tries_used = 0
+
+if "is_unlocked" not in st.session_state:
+    st.session_state.is_unlocked = False
 
 FREE_LIMIT = 5
 tries_left = FREE_LIMIT - st.session_state.tries_used
@@ -45,20 +48,38 @@ selected_service = st.sidebar.radio(
 
 # Counter Tracker sa Sidebar
 st.sidebar.markdown("---")
-if tries_left > 0:
+if st.session_state.is_unlocked:
+    st.sidebar.success("✅ VIP Subscriber Access Active (Unlimited Tries)!")
+elif tries_left > 0:
     st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
 else:
     st.sidebar.error("❌ Naubos na ang Libreng Subok!")
-    st.sidebar.warning("💳 Mag-subscribe ng ₱99/month via GCash para sa Unlimited Access.")
+
+# QR Code at Payment Auto-Verification Section
+st.sidebar.markdown("---")
+st.sidebar.subheader("💳 Instant Unlock via GCash")
+st.sidebar.caption("1. I-scan ang QR Code o mag-send ng ₱99 sa GCash.\n2. I-paste ang Ref No. para mag-unlock.")
+
+# Pwede mong palitan ang image link ng sarili mong GCash QR Code image URL
+st.sidebar.image("https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GCash-Payment-99PHP", caption="Scan to Pay ₱99 via GCash")
+
+gcash_ref = st.sidebar.text_input("GCash Reference No.:")
+if st.sidebar.button("Verify & Unlock"):
+    if len(gcash_ref.strip()) >= 10:  # Validates GCash reference number length
+        st.session_state.is_unlocked = True
+        st.sidebar.success("🎉 Payment Verified! Unlimited Access Activated.")
+        st.rerun()
+    else:
+        st.sidebar.error("⚠️ Invalid Reference Number. Paki-check ang GCash receipt.")
 
 # Fallback API Key input
 if not api_key:
     api_key = st.sidebar.text_input("Gemini API Key:", type="password")
 
 # --- MAIN LOGIC PER SERVICE ---
-if tries_left <= 0:
+if tries_left <= 0 and not st.session_state.is_unlocked:
     st.error("🔒 Nagamit mo na ang iyong 5 libreng subok.")
-    st.info("I-send ang ₱99 subscription via GCash para ma-activate ang Pro Access.")
+    st.info("I-scan ang GCash QR Code sa sidebar at i-paste ang Reference Number para ma-unlock agad ang Unlimited Access.")
 else:
     # -------------------------------------------------------------
     # TAB 1: Lesson Plan Generator
@@ -84,12 +105,12 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Strict prompt with Grammar/Spelling check instructions
-                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, Evaluation, at Assignment. MAHALAGA: 1. Siguraduhing PERFECT ang English grammar, spelling, punctuation, at sentence structure nang walang anumang typographical errors. 2. Maglagay ng Answer Key sa pinakababa para sa Evaluation at Assignment. 3. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Isulat ang mga math equations nang malinis sa iisang linya (halimbawa: 1. 54 + 28 =)."
+                    prompt = f"Gumawa ng detalyadong DepEd/CHED Lesson Plan para sa {subject} ({grade}) na may topic na '{topic}'. Gamitin ang wikang {language} sa buong pagsulat. Isama ang Objectives, Subject Matter, Procedure, Evaluation, at Assignment. MAHALAGA: 1. Siguraduhing PERFECT ang grammar, spelling, punctuation, at sentence structure sa napiling wika ({language}) nang walang anumang typographical errors. 2. Maglagay ng Answer Key sa pinakababa para sa Evaluation at Assignment. 3. Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Isulat ang mga math equations nang malinis sa iisang linya (halimbawa: 1. 54 + 28 =)."
                     
                     with st.spinner("Ginagawa ang Lesson Plan..."):
                         response = model.generate_content(prompt)
-                        st.session_state.tries_used += 1
+                        if not st.session_state.is_unlocked:
+                            st.session_state.tries_used += 1
                         st.session_state.lesson_plan_result = response.text
                 except Exception as e:
                     st.error(f"May error: {e}")
@@ -107,7 +128,7 @@ else:
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
 
-  # -------------------------------------------------------------
+    # -------------------------------------------------------------
     # TAB 2: Quiz Generator
     # -------------------------------------------------------------
     elif selected_service == "❓ Quiz Generator":
@@ -132,12 +153,12 @@ else:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-3.8-flash')
                     
-                    # Strict prompt with Subject and Grade Level
                     prompt = f"Gumawa ng {num_items}-item multiple choice quiz sa {quiz_subject} para sa {quiz_grade} na may topic na '{quiz_topic}'. Gamitin ang wikang {quiz_language} sa pagsulat ng mga tanong at pagpipilian. Isama ang Answer Key sa pinakababa. MAHALAGA: Siguraduhing PERFECT at walang mali sa grammar, spelling, at formatting sa napiling wika ({quiz_language}). Huwag gumamit ng Markdown symbols (#, *, _) o LaTeX codes. Gumamit lamang ng malinis na plain text."
                     
                     with st.spinner("Ginagawa ang Quiz..."):
                         response = model.generate_content(prompt)
-                        st.session_state.tries_used += 1
+                        if not st.session_state.is_unlocked:
+                            st.session_state.tries_used += 1
                         st.session_state.quiz_result = response.text
                 except Exception as e:
                     st.error(f"May error: {e}")
@@ -173,7 +194,8 @@ else:
             if raw_names:
                 lines = [name.strip().upper() for name in raw_names.split("\n") if name.strip()]
                 lines.sort()
-                st.session_state.tries_used += 1
+                if not st.session_state.is_unlocked:
+                    st.session_state.tries_used += 1
                 
                 header_text = f"CLASS LIST - {list_title}" if list_language == "English" else f"LISTAHAN NG MGA MAG-AARAL - {list_title}"
                 formatted_text = f"{header_text}\n" + "="*30 + "\n\n" + "\n".join([f"{idx+1}. {name}" for idx, name in enumerate(lines)])
