@@ -206,4 +206,5 @@ elif service == "🧹 Class List Cleaner":
             
             register_usage()
             st.markdown("### ✨ Malinis na Listahan:")
-            formatted_text = "\n".join
+            formatted_text = "\n".join([f"{i+1}. {name}" for i, name in enumerate(names_list)])
+            st.text_area("Resulta (Ready to Copy):", formatted_text, height=200)
