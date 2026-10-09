@@ -53,7 +53,7 @@ if st.session_state.is_unlocked:
 elif tries_left > 0:
     st.sidebar.success(f"🎁 Free Trial: **{tries_left}** / {FREE_LIMIT} tries left")
 else:
-    st.sidebar.image("gcashqrcode.jpg", caption="Scan to Pay ₱99 via GCash")
+    st.sidebar.image("gcashqrcode.jpg", caption="📲 Scan QR Code & Pay ₱99 to Unlock Unlimited Access (1 Month) ")
 
 # QR Code at Payment Auto-Verification Section
 st.sidebar.markdown("---")
@@ -61,7 +61,7 @@ st.sidebar.subheader("💳 Instant Unlock via GCash")
 st.sidebar.caption("1. I-scan ang QR Code o mag-send ng ₱99 sa GCash.\n2. I-paste ang Ref No. para mag-unlock.")
 
 # Pwede mong palitan ang image link ng sarili mong GCash QR Code image URL
-st.sidebar.image("https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=GCash-Payment-99PHP", caption="Scan to Pay ₱99 via GCash")
+st.sidebar.image("gcashqrcode.jpg", caption="📲 Scan to Pay ₱99 via GCash for 1-Month VIP Access")
 
 gcash_ref = st.sidebar.text_input("GCash Reference No.:")
 if st.sidebar.button("Verify & Unlock"):
