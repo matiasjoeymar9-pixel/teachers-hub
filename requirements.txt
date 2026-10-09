@@ -1,3 +1,5 @@
 streamlit
 google-generativeai
 python-docx
+requests
+extra-streamlit-components
