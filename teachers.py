@@ -157,19 +157,23 @@ def register_usage():
             pass
         st.query_params["tries"] = str(st.session_state.tries_count)
 
-from google import genai
+import google.generativeai as genai
 
 def generate_ai_response(prompt_text):
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt_text,
-        )
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt_text)
         if response and response.text:
             return response.text
     except Exception as e:
-        return f"⚠️ Error Details: {str(e)}"
+        try:
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(prompt_text)
+            if response and response.text:
+                return response.text
+        except Exception as e2:
+            return f"⚠️ Error Details: {str(e)}"
     return "⚠️ Error: Hindi ma-access ang Gemini AI Model."
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
