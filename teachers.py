@@ -158,15 +158,17 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        response = model.generate_content(prompt_text)
-        if response and response.text:
-            return response.text
-    except Exception as e:
-        return f"⚠️ Error Details: {str(e)}"
-    return "⚠️ Error: Hindi ma-access ang Gemini AI Model."
+    genai.configure(api_key=GEMINI_API_KEY)
+    # Sinusubukan ang mga available na models para hindi mag-fail
+    for model_name in ['gemini-1.5-flash', 'gemini-1.5-pro']:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt_text)
+            if response and response.text:
+                return response.text
+        except Exception:
+            continue
+    return "⚠️ Error: Hindi ma-access ang Gemini AI Model. Paki-check ang iyong API key."
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
