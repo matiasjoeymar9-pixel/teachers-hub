@@ -47,8 +47,8 @@ def update_github_db(data, sha):
 
 # --- GEMINI AI GENERATION FUNCTION (REST API) ---
 def generate_ai_response(prompt_text):
-    # Ginagamit ang v1 endpoint sa halip na v1beta at gemini-2.0-flash
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    # Ginagamit na ang gemini-3.8-flash ayon sa bagong advisory ng Google
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{
