@@ -54,5 +54,9 @@
     "def generate_ai_response(prompt_text):     genai.configure(api_key=GEMINI_API_KEY)     for model_name in ['gemini-2.0-flash', 'gemini-1.5-flash']:         try:             model = genai.GenerativeModel(model_name)             response = model.generate_content(prompt_text)             if response and response.text:                 return response.text         except Exception:             continue     return \"\u26a0\ufe0f Error: Hindi ma-access ang Gemini AI Model. Paki-check ang iyong API key.\"": {
         "date_activated": "2026-10-10",
         "expiration_date": "2026-11-09"
+    },
+    "def generate_ai_response(prompt_text):     url = f\"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}\"     headers = {'Content-Type': 'application/json'}     payload = {         \"contents\": [{             \"parts\": [{\"text\": prompt_text}]         }]     }     try:         response = requests.post(url, headers=headers, json=payload)         if response.status_code == 200:             data = response.json()             return data['candidates'][0]['content']['parts'][0]['text']         else:             return f\"\u26a0\ufe0f API Error ({response.status_code}): {response.text}\"     except Exception as e:         return f\"\u26a0\ufe0f Connection Error: {str(e)}\"": {
+        "date_activated": "2026-10-10",
+        "expiration_date": "2026-11-09"
     }
 }
