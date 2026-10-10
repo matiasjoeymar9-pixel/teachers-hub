@@ -158,22 +158,21 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
-    # Sinusubukan gamitin ang gemini-1.5-flash na may explicit safety at configuration
+    # Sinusubukan gamitin ang tamang models/gemini-1.5-flash format
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('models/gemini-1.5-flash')
         response = model.generate_content(prompt_text)
         if response and response.text:
             return response.text
     except Exception as e:
-        # Fallback sa gemini-pro kung magka-issue sa flash
         try:
-            model = genai.GenerativeModel('gemini-pro')
+            model = genai.GenerativeModel('gemini-1.5-flash')
             response = model.generate_content(prompt_text)
             if response and response.text:
                 return response.text
-        except Exception:
-            pass
+        except Exception as e2:
+            return f"⚠️ Error Details: {str(e2)}"
         return f"⚠️ Error Details: {str(e)}"
     return "⚠️ Error: Hindi ma-access ang Gemini AI Model."
 
