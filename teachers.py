@@ -1,11 +1,12 @@
 import streamlit as st
 from docx import Document
 import io
+import requests
 import json
 import base64
 from datetime import datetime, timedelta
 import extra_streamlit_components as stx
-from google import genai
+import google.generativeai as genai
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -17,55 +18,16 @@ st.set_page_config(
 # --- GEMINI API CONFIGURATION ---
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
-# --- GITHUB DATABASE SETTINGS ---
-GITHUB_TOKEN = st.secrets.get("GITHUB_TOKEN", "")
-REPO_OWNER = "matiasjoeymar9-pixel"
-REPO_NAME = "teachers-hub"
-FILE_PATH = "database.json"
-
-def get_github_db():
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        content = base64.b64decode(data['content']).decode('utf-8')
-        return json.loads(content), data['sha']
-    return None, None
-
-def update_github_db(data, sha):
-    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/contents/{FILE_PATH}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    content = base64.b64encode(json.dumps(data, indent=4).encode('utf-8')).decode('utf-8')
-    payload = {
-        "message": "Update database",
-        "content": content,
-        "sha": sha
-    }
-    response = requests.put(url, headers=headers, json=payload)
-    return response.status_code == 200
-
-# --- GEMINI AI GENERATION FUNCTION (SDK) ---
+# --- GEMINI AI GENERATION FUNCTION ---
 def generate_ai_response(prompt_text):
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt_text,
-        )
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt_text)
         if response and response.text:
             return response.text
     except Exception as e:
-        try:
-            client = genai.Client(api_key=GEMINI_API_KEY)
-            response = client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt_text,
-            )
-            if response and response.text:
-                return response.text
-        except Exception as e2:
-            return f"⚠️ API Error: {str(e2)}"
+        return f"⚠️ API Error: {str(e)}"
     return "⚠️ Error: Walang naging tugon mula sa AI."
 
 # --- MAIN APP INTERFACE ---
