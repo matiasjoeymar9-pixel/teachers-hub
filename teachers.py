@@ -19,10 +19,14 @@ st.set_page_config(
 # --- GEMINI API CONFIGURATION ---
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
-# --- HELPER: CLEAN TEXT FROM EXTRA SYMBOLS ---
+# --- HELPER: CLEAN TEXT FROM EXTRA SYMBOLS & BROKEN CODES ---
 def clean_text_output(text):
-    cleaned = text.replace('```', '')
-    cleaned = re.sub(r'[\+\_\)\*\&]+', '', cleaned)
+    if not text:
+        return ""
+    # Alisin ang code block markers
+    cleaned = text.replace('```python', '').replace('```', '')
+    # Ayusin ang mga nasirang math/symbol formatting habang pinapanatili ang mga tamang pananda
+    cleaned = re.sub(r'[\+\_\)\*\&]{2,}', ' ', cleaned)
     return cleaned.strip()
 
 # --- HELPER: CONVERT TEXT TO DOCX ---
@@ -83,7 +87,7 @@ if service == "📝 Lesson Plan Generator":
     grade_level = st.selectbox("Grade Level:", grade_levels)
     
     language = st.selectbox("Wika / Language:", ["English", "Filipino"])
-    topic = st.text_input("Topic / Aralin:", "Addition")
+    topic = st.text_input("Topic / Aralin:", "Addition of Radicals")
 
     if st.button("Generate Lesson Plan"):
         if not GEMINI_API_KEY:
@@ -93,8 +97,8 @@ if service == "📝 Lesson Plan Generator":
                 prompt = (
                     f"Gumawa ng napakalinaw, propesyonal, at detalyadong 4-As Lesson Plan para sa Subject na {subject}, "
                     f"Grade Level {grade_level}, sa wikang {language} tungkol sa paksang '{topic}'. "
-                    f"Tiyaking tama ang spelling at grammar. Huwag maglagay ng anumang raw code o script snippets. "
-                    f"Dapat ay may kasamang kumpletong Answer Key para sa Evaluation at kumpletong sagot o gabay para sa Assignment."
+                    f"Tiyaking tama ang spelling, grammar, at pormula. Huwag maglagay ng anumang raw code, HTML tags, o sirang script snippets. "
+                    f"Dapat ay may kasamang kumpletong Answer Key para sa Evaluation at kumpletong step-by-step solutions o gabay para sa Assignment."
                 )
                 result = generate_ai_response(prompt)
                 st.markdown("## 📜 Resulta:")
@@ -121,8 +125,8 @@ elif service == "❓ Quiz Generator":
             with st.spinner("Gumagawa ng Quiz..."):
                 prompt = (
                     f"Gumawa ng {num_items}-item na pagsusulit o quiz tungkol sa '{quiz_topic}'. "
-                    f"Tiyaking tama ang grammar at spelling, walang raw code, at isama ang kumpletong "
-                    f"Answer Key para sa lahat ng mga tanong pati na ang mga ibinigay na Assignment items."
+                    f"Tiyaking tama ang grammar, spelling, at walang raw code. "
+                    f"Isama ang kumpletong Answer Key para sa lahat ng mga tanong pati na ang mga Assignment items."
                 )
                 result = generate_ai_response(prompt)
                 st.markdown("## 📜 Resulta ng Quiz:")
