@@ -1,11 +1,11 @@
 import streamlit as st
 from docx import Document
 import io
-import requests
 import json
 import base64
 from datetime import datetime, timedelta
 import extra_streamlit_components as stx
+from google import genai
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -45,25 +45,28 @@ def update_github_db(data, sha):
     response = requests.put(url, headers=headers, json=payload)
     return response.status_code == 200
 
-# --- GEMINI AI GENERATION FUNCTION (REST API) ---
+# --- GEMINI AI GENERATION FUNCTION (SDK) ---
 def generate_ai_response(prompt_text):
-    # Ginagamit na ang gemini-3.8-flash ayon sa bagong advisory ng Google
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
-    headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{
-            "parts": [{"text": prompt_text}]
-        }]
-    }
     try:
-        response = requests.post(url, headers=headers, json=payload)
-        if response.status_code == 200:
-            data = response.json()
-            return data['candidates'][0]['content']['parts'][0]['text']
-        else:
-            return f"⚠️ API Error ({response.status_code}): {response.text}"
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt_text,
+        )
+        if response and response.text:
+            return response.text
     except Exception as e:
-        return f"⚠️ Connection Error: {str(e)}"
+        try:
+            client = genai.Client(api_key=GEMINI_API_KEY)
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=prompt_text,
+            )
+            if response and response.text:
+                return response.text
+        except Exception as e2:
+            return f"⚠️ API Error: {str(e2)}"
+    return "⚠️ Error: Walang naging tugon mula sa AI."
 
 # --- MAIN APP INTERFACE ---
 st.title("🏫 Guro Hub")
