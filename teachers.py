@@ -160,21 +160,29 @@ def register_usage():
 import google.generativeai as genai
 
 def generate_ai_response(prompt_text):
+    # Ginagamit ang v1beta REST endpoint na direktang tumatanggap ng API key
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt_text}]
+        }]
+    }
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt_text)
-        if response and response.text:
-            return response.text
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            return data['candidates'][0]['content']['parts'][0]['text']
+        else:
+            # Fallback sa gemini-pro kung magka-issue ang flash
+            url_pro = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
+            response_pro = requests.post(url_pro, headers=headers, json=payload)
+            if response_pro.status_code == 200:
+                data_pro = response_pro.json()
+                return data_pro['candidates'][0]['content']['parts'][0]['text']
+            return f"⚠️ API Error ({response.status_code}): {response.text}"
     except Exception as e:
-        try:
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt_text)
-            if response and response.text:
-                return response.text
-        except Exception as e2:
-            return f"⚠️ Error Details: {str(e)}"
-    return "⚠️ Error: Hindi ma-access ang Gemini AI Model."
+        return f"⚠️ Connection Error: {str(e)}"
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
