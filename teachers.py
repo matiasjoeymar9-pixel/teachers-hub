@@ -158,16 +158,24 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
-    # Ginagamit ang stable at active na Gemini models para sa bagong API Key structure
-    for model_name in ['gemini-1.5-flash', 'gemini-1.5-pro']:
+    # Sinusubukan gamitin ang gemini-1.5-flash na may explicit safety at configuration
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        response = model.generate_content(prompt_text)
+        if response and response.text:
+            return response.text
+    except Exception as e:
+        # Fallback sa gemini-pro kung magka-issue sa flash
         try:
-            model = genai.GenerativeModel(model_name)
+            model = genai.GenerativeModel('gemini-pro')
             response = model.generate_content(prompt_text)
             if response and response.text:
                 return response.text
         except Exception:
-            continue
-    return "⚠️ Error: Hindi ma-access ang Gemini AI Model. Paki-check ang iyong GEMINI_API_KEY sa Streamlit secrets."
+            pass
+        return f"⚠️ Error Details: {str(e)}"
+    return "⚠️ Error: Hindi ma-access ang Gemini AI Model."
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
