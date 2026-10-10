@@ -159,8 +159,7 @@ def register_usage():
 
 def generate_ai_response(prompt_text):
     genai.configure(api_key=GEMINI_API_KEY)
-    # Sinusubukan ang mga available na models para hindi mag-fail
-    for model_name in ['gemini-1.5-flash', 'gemini-1.5-pro']:
+    for model_name in ['gemini-2.0-flash', 'gemini-1.5-flash']:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt_text)
