@@ -22,7 +22,7 @@ GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 def generate_ai_response(prompt_text):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3.8-flash')
         response = model.generate_content(prompt_text)
         if response and response.text:
             return response.text
