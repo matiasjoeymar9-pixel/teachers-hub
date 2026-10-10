@@ -47,8 +47,8 @@ def update_github_db(data, sha):
 
 # --- GEMINI AI GENERATION FUNCTION (REST API) ---
 def generate_ai_response(prompt_text):
-    # Ginagamit ang v1beta REST endpoint na may gemini-1.5-flash
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # Ginagamit ang v1 endpoint sa halip na v1beta at gemini-2.0-flash
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
     headers = {'Content-Type': 'application/json'}
     payload = {
         "contents": [{
@@ -61,12 +61,6 @@ def generate_ai_response(prompt_text):
             data = response.json()
             return data['candidates'][0]['content']['parts'][0]['text']
         else:
-            # Fallback sakaling magka-issue
-            url_alt = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={GEMINI_API_KEY}"
-            response_alt = requests.post(url_alt, headers=headers, json=payload)
-            if response_alt.status_code == 200:
-                data_alt = response_alt.json()
-                return data_alt['candidates'][0]['content']['parts'][0]['text']
             return f"⚠️ API Error ({response.status_code}): {response.text}"
     except Exception as e:
         return f"⚠️ Connection Error: {str(e)}"
