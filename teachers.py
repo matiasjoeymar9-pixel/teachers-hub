@@ -160,7 +160,7 @@ def register_usage():
 def generate_ai_response(prompt_text):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(prompt_text)
         if response and response.text:
             return response.text
