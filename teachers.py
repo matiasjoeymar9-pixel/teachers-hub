@@ -18,6 +18,25 @@ st.set_page_config(
 # --- GEMINI API CONFIGURATION ---
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", "")
 
+# --- HELPER: CONVERT TEXT TO DOCX ---
+def create_docx(text_content):
+    doc = Document()
+    doc.add_heading('Guro Hub - Generated Output', 0)
+    for line in text_content.split('\n'):
+        if line.startswith('# '):
+            doc.add_heading(line.replace('# ', ''), level=1)
+        elif line.startswith('## '):
+            doc.add_heading(line.replace('## ', ''), level=2)
+        elif line.startswith('### '):
+            doc.add_heading(line.replace('### ', ''), level=3)
+        else:
+            doc.add_paragraph(line)
+    
+    bio = io.BytesIO()
+    doc.save(bio)
+    bio.seek(0)
+    return bio
+
 # --- GEMINI AI GENERATION FUNCTION ---
 def generate_ai_response(prompt_text):
     try:
@@ -52,10 +71,25 @@ if service == "📝 Lesson Plan Generator":
             st.error("⚠️ Walang nakitang GEMINI_API_KEY sa Streamlit secrets.")
         else:
             with st.spinner("Gumagawa ng Lesson Plan..."):
-                prompt = f"Gumawa ng detalyadong 4-As Lesson Plan para sa Subject na {subject}, Grade Level {grade_level}, sa wikang {language} tungkol sa paksang '{topic}'."
+                prompt = (
+                    f"Gumawa ng napakalinaw, propesyonal, at detalyadong 4-As Lesson Plan para sa Subject na {subject}, "
+                    f"Grade Level {grade_level}, sa wikang {language} tungkol sa paksang '{topic}'. "
+                    f"Tiyaking tama ang spelling at grammar (Professional English/Filipino). "
+                    f"Huwag maglagay ng anumang raw code o script snippets. "
+                    f"Dapat ay may kasamang kumpletong Answer Key para sa Evaluation at kumpletong sagot o gabay para sa Assignment."
+                )
                 result = generate_ai_response(prompt)
                 st.markdown("## 📜 Resulta:")
                 st.markdown(result)
+                
+                # Download Button for DOCX
+                docx_file = create_docx(result)
+                st.download_button(
+                    label="📥 Download as DOCX",
+                    data=docx_file,
+                    file_name=f"Lesson_Plan_{subject}_{topic}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
 
 elif service == "❓ Quiz Generator":
     st.header("❓ Quiz Generator")
@@ -67,10 +101,23 @@ elif service == "❓ Quiz Generator":
             st.error("⚠️ Walang nakitang GEMINI_API_KEY sa Streamlit secrets.")
         else:
             with st.spinner("Gumagawa ng Quiz..."):
-                prompt = f"Gumawa ng {num_items}-item na quiz tungkol sa '{quiz_topic}' kasama ang answer key."
+                prompt = (
+                    f"Gumawa ng {num_items}-item na pagsusulit o quiz tungkol sa '{quiz_topic}'. "
+                    f"Tiyaking tama ang grammar at spelling, walang raw code, at isama ang kumpletong "
+                    f"Answer Key para sa lahat ng mga tanong pati na ang mga ibinigay na Assignment items."
+                )
                 result = generate_ai_response(prompt)
                 st.markdown("## 📜 Resulta ng Quiz:")
                 st.markdown(result)
+                
+                # Download Button for Quiz DOCX
+                docx_file = create_docx(result)
+                st.download_button(
+                    label="📥 Download Quiz as DOCX",
+                    data=docx_file,
+                    file_name=f"Quiz_{quiz_topic}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
 
 elif service == "🧹 Class List Cleaner":
     st.header("🧹 Class List Cleaner")
