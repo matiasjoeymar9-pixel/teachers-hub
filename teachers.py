@@ -49,7 +49,7 @@ def generate_ai_response(prompt_text):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         # Ginamit ang pinakabagong suportadong Gemini model identifier
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-4.0-flash')
         response = model.generate_content(prompt_text)
         if response and response.text:
             return clean_text_output(response.text)
