@@ -158,23 +158,22 @@ def register_usage():
         st.query_params["tries"] = str(st.session_state.tries_count)
 
 def generate_ai_response(prompt_text):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{
+            "parts": [{"text": prompt_text}]
+        }]
+    }
     try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        # Subukan muna ang gemini-1.5-flash
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt_text)
-        if response and response.text:
-            return response.text
-    except Exception as e1:
-        try:
-            # Fallback sa gemini-pro kung magka-issue ang flash
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt_text)
-            if response and response.text:
-                return response.text
-        except Exception as e2:
-            return f"⚠️ API Error: {str(e1)}"
-    return "⚠️ Error: Walang naging tugon mula sa AI."
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            data = response.json()
+            return data['candidates'][0]['content']['parts'][0]['text']
+        else:
+            return f"⚠️ API Error ({response.status_code}): {response.text}"
+    except Exception as e:
+        return f"⚠️ Connection Error: {str(e)}"
 
 # --- SERVICE 1: LESSON PLAN GENERATOR ---
 if service == "📝 Lesson Plan Generator":
