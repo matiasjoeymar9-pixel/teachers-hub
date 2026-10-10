@@ -48,8 +48,8 @@ def create_docx(text_content):
 def generate_ai_response(prompt_text):
     try:
         genai.configure(api_key=GEMINI_API_KEY)
-        # Gumamit ng stable at mabilis na Gemini model
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Ginamit ang pinakabagong suportadong Gemini model identifier
+        model = genai.GenerativeModel('gemini-2.5-flash')
         response = model.generate_content(prompt_text)
         if response and response.text:
             return clean_text_output(response.text)
@@ -81,7 +81,7 @@ if service == "📝 Lesson Plan Generator":
     grade_level = st.selectbox("Grade Level:", grade_levels)
     
     language = st.selectbox("Wika / Language:", ["English", "Filipino"])
-    topic = st.text_input("Topic / Aralin:", "Addition of Radicals")
+    topic = st.text_input("Topic / Aralin:", "Addition")
 
     if st.button("Generate AI Lesson Plan"):
         if not GEMINI_API_KEY:
